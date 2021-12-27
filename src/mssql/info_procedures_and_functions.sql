@@ -66,5 +66,46 @@ begin
     where (@SchemaName is null or @SchemaName = schemas.name)
         and (@RoutineName is null or @RoutineName = routines.name)
     order by [Schema Name], [Routine Name], parameters.parameter_id;
+
+    -- table value functions return tables
+    select schemas.name as [Schema Name]
+    , routines.name as [Routine Name]
+    , columns.name as [Column Name]
+    , types.name as [Field Type]
+    , case when columns.max_length != -1 and types.name in ('nchar','nvarchar') then columns.max_length / 2 else columns.max_length end as [Max Length]
+    , columns.precision as Precision
+    , columns.scale as Scale
+    , case when columns.is_nullable = 1 then 'Yes' else 'No' end as [Is Nullable]
+    , case when SERVERPROPERTY('collation') = columns.collation_name then null else columns.collation_name end as [Collation Name]
+    , columns.encryption_type_desc as [Encrypted Type]
+    , cek.name as [Column Encyption Key]
+    , columns.encryption_algorithm_name as [Encyption Algorithm Name]
+    from sys.all_objects routines
+        inner join sys.schemas on (routines.schema_id = schemas.schema_id)
+        inner join sys.all_columns columns on (routines.object_id = columns.object_id)
+        left join sys.column_encryption_keys cek on (columns.column_encryption_key_id = cek.column_encryption_key_id)
+        left join sys.types on (columns.user_type_id = types.user_type_id)
+    where routines.type in ('FT', 'IF', 'TF')
+        and (@SchemaName is null or @SchemaName = schemas.name)
+        and (@RoutineName is null or @RoutineName = routines.name)
+    order by [Schema Name], [Routine Name], columns.column_id;
+
+    -- dependencies
+    select schemas.name as [Schema Name]
+    , routines.name as [Routine Name]
+    , sed.referenced_schema_name as [Referenced Schema Name]
+    , sed.referenced_entity_name as [Referenced Entity Name]
+    from sys.all_objects routines
+        inner join sys.schemas on (routines.schema_id = schemas.schema_id)
+        inner join sys.sql_expression_dependencies sed on (routines.object_id = sed.referencing_id)
+    where routines.type in (
+        -- functions
+        'AF','FN','FS','FT','IF','TF',
+        -- procedures
+        'P','PC','RF','X'
+    ) and (@SchemaName is null or @SchemaName = schemas.name)
+        and (@RoutineName is null or @RoutineName = routines.name)
+        and sed.referenced_minor_id = 0
+    order by [Schema Name], [Routine Name], [Referenced Schema Name], [Referenced Entity Name];
 end;
 go
