@@ -259,4 +259,18 @@ BEGIN
             and views.is_ms_shipped in (@IncludeShippedViews, 0)
         order by [Schema Name], [View Name], [Trigger Name];
     end;
+
+    -- dependencies
+    select schemas.name as [Schema Name]
+    , views.name as [View Name]
+    , sed.referenced_schema_name as [Referenced Schema Name]
+    , sed.referenced_entity_name as [Referenced Entity Name]
+    from sys.all_views views
+        inner join sys.schemas on (views.schema_id = schemas.schema_id)
+        inner join sys.sql_expression_dependencies sed on (views.object_id = sed.referencing_id)
+    where (@SchemaName is null or @SchemaName = schemas.name)
+        and (@ViewName is null or @ViewName = views.name)
+        and views.is_ms_shipped in (@IncludeShippedViews, 0)
+        and sed.referenced_minor_id = 0
+    order by [Schema Name], [View Name], [Referenced Schema Name], [Referenced Entity Name];
 end;
