@@ -44,6 +44,8 @@ begin
     , p.data_compression_desc as [Data Compression]
     -- temporial
     , case when user_tables.temporal_type_desc<>'' then user_tables.temporal_type_desc else null end as [Temporal Type] 
+    , history_start_period.Column_Name as [History Start Period]
+    , history_end_period.Column_Name as [History End Period]
     , case when history_table.name is not null then history_schema.name + '.' + history_table.name else null end as [History Table] 
     , case when user_tables.temporal_type = 2 and user_tables.history_retention_period_unit <> -1 then user_tables.history_retention_period else null end as [History Retention Period] 
     , case when user_tables.temporal_type = 2 and user_tables.history_retention_period_unit <> -1 then user_tables.history_retention_period_unit_desc else null end as [History Retention Period Unit]
@@ -62,7 +64,19 @@ begin
         left join sys.internal_tables on (all_tables.object_id = internal_tables.object_id)
         left join sys.change_tracking_tables on (all_tables.object_id = change_tracking_tables.object_id) 
         left join sys.tables history_table on (user_tables.history_table_id = history_table.object_id) 
-        left join sys.schemas history_schema on (history_table.schema_id = history_schema.schema_id) 
+        left join sys.schemas history_schema on (history_table.schema_id = history_schema.schema_id)
+        left join (
+            select periods.object_id, columns.name as Column_Name
+            from sys.periods
+                inner join sys.all_columns columns on (periods.object_id = columns.object_id and periods.start_column_id = columns.column_id)
+            where periods.period_type = 1 -- system-time period
+        ) history_start_period on (all_tables.object_id = history_start_period.object_id)
+        left join (
+            select periods.object_id, columns.name as Column_Name
+            from sys.periods
+                inner join sys.all_columns columns on (periods.object_id = columns.object_id and periods.end_column_id = columns.column_id)
+            where periods.period_type = 1 -- system-time period
+        ) history_end_period on (all_tables.object_id = history_end_period.object_id)
         outer apply (
             select max(p.data_compression_desc) as data_compression_desc
             from sys.partitions p
