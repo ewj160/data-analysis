@@ -52,8 +52,11 @@ begin
     -- graphs
     , case when user_tables.is_node = 1 then 'Yes' else 'No' end as [Is Node]
     , case when user_tables.is_edge = 1 then 'Yes' else 'No' end as [Is Edge]
-    -- Azure SQL database, preview only
-    --, all_tables.ledger_type, all_tables.ledger_type_desc as [Ledger Type]
+    -- ledger
+    --, user_tables.ledger_type
+    , user_tables.ledger_type_desc as [Ledger Type]
+    , case when ledger_view_table.name is not null then ledger_view_schema.name + '.' + ledger_view_table.name else null end as [Ledger View]
+    , case when user_tables.is_dropped_ledger_table = 1 then 'Yes' else 'No' end as [Is Dropped Ledger Table]
     -- internal tables
     , internal_tables.internal_type_desc as [Internal Type]
     , table_comment.VALUE as [Table Description]
@@ -83,6 +86,9 @@ begin
             where user_tables.object_id = p.object_id
         ) p
         left join sys.extended_properties table_comment on (table_comment.class = 1 and table_comment.major_id = all_tables.object_id and table_comment.minor_id = 0 and table_comment.name = N'MS_Description')
+        -- ledger
+        left join sys.all_objects ledger_view_table on (user_tables.ledger_view_id = ledger_view_table.object_id)
+        left join sys.schemas ledger_view_schema on (ledger_view_table.schema_id = ledger_view_schema.schema_id)
     where (@SchemaName is null or @SchemaName = schemas.name)
         and (@TableName is null or @TableName = all_tables.name)
     order by [Schema Name], [Table Name]
@@ -149,8 +155,8 @@ begin
     , sensitivity_classifications.label as [Sensitivity Label]
     , sensitivity_classifications.information_type as [Information Type]
     , sensitivity_classifications.rank_desc as [Sensitivity Rank]
-    -- Future: legder
-    -- c.ledger_view_column_type_desc
+    -- legder
+    , columns.ledger_view_column_type_desc as [Ledger View Column]
     from sys.all_objects all_tables
         inner join @TableTypes table_types on (all_tables.type = table_types.Type)
         inner join sys.schemas on (all_tables.schema_id = schemas.schema_id)
