@@ -33,5 +33,21 @@ select d.database_id
 , case when d.is_auto_update_stats_async_on = 1 then 'Yes' else 'No' end as [Is Auto Update Stats Async On]
 from sys.databases d 
 	left join sys.change_tracking_databases ctcd on (d.database_id=ctcd.database_id)
-where d.database_id = DB_ID()
-order by [Database Name];
+where d.database_id = DB_ID();
+
+select desired_state_desc [Desired State]
+, actual_state_desc as [Actual State]
+, actual_state_additional_info as [Actual State Additional Info]
+, current_storage_size_mb as [Current Storage Size (MB)]
+, max_storage_size_mb as [Max Storage Size (MB)]
+, flush_interval_seconds as [Flush Interval (s)]
+, stale_query_threshold_days as [Stale Query Threshold (days)]
+, max_plans_per_query as [Max Plans per Query]
+, query_capture_mode_desc as [Query Capture Mode]
+, capture_policy_execution_count
+, capture_policy_total_compile_cpu_time_ms
+, capture_policy_total_execution_cpu_time_ms
+, capture_policy_stale_threshold_hours
+, size_based_cleanup_mode_desc as [Size Based Cleanup Mode]
+, wait_stats_capture_mode_desc as [Wait Stats Capture Mode]
+from sys.database_query_store_options;

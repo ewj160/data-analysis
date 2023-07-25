@@ -24,11 +24,6 @@ SELECT @@SERVERNAME as [Server Name Param]
 , SERVERPROPERTY('Edition') as Edition
 ;
 
-select name, value, description
-from sys.configurations
-order by name;
-
-
 /*
 # Configuration
 */
