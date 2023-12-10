@@ -42,6 +42,7 @@ begin
     , user_tables.durability_desc as [Durability] 
     , case when user_tables.is_external = 1 then 'Yes' else 'No' end as [Is External]
     , p.data_compression_desc as [Data Compression]
+    , p.xml_compression_desc as [XML Compression]
     -- temporial
     , case when user_tables.temporal_type_desc<>'' then user_tables.temporal_type_desc else null end as [Temporal Type] 
     , history_start_period.Column_Name as [History Start Period]
@@ -82,6 +83,7 @@ begin
         ) history_end_period on (all_tables.object_id = history_end_period.object_id)
         outer apply (
             select max(p.data_compression_desc) as data_compression_desc
+            , max(p.xml_compression_desc) as xml_compression_desc
             from sys.partitions p
             where user_tables.object_id = p.object_id
         ) p
