@@ -31,6 +31,9 @@ select d.database_id
 , case when d.is_auto_create_stats_on = 1 then 'Yes' else 'No' end as [Is Auto Create Stats On]
 , case when d.is_auto_update_stats_on = 1 then 'Yes' else 'No' end as [Is Auto Update Stats On]
 , case when d.is_auto_update_stats_async_on = 1 then 'Yes' else 'No' end as [Is Auto Update Stats Async On]
+, case when DATABASEPROPERTYEX('testdb', 'IsOptimizedLockingOn') = 1 then 'Yes' else 'No' end as [Is Optimized Locking Enabled]
+, case when d.is_read_committed_snapshot_on = 1 then 'Yes' else 'No' end as [Read Committed Snapshot Isolation (RCSI)]
+, case when d.is_accelerated_database_recovery_on = 1 then 'Yes' else 'No' end as [Accelerated Database Recovery (ADR)]
 from sys.databases d 
 	left join sys.change_tracking_databases ctcd on (d.database_id=ctcd.database_id)
 where d.database_id = DB_ID();
