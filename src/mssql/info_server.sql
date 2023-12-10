@@ -28,9 +28,15 @@ SELECT @@SERVERNAME as [Server Name Param]
 # Configuration
 */
 
-select name, value, description
+select name as [Server Wide Configuration]
+, value as [Value]
+, minimum as [Min Value]
+, maximum as [Max Value]
+, [description] as [Description]
+, case when is_dynamic = 1 then 'Yes' else 'No' end as [Is Dynamic]
+, case when is_advanced = 1 then 'Yes' else 'No' end as [Is Advanced]
 from sys.configurations
-order by name
+order by [Server Wide Configuration];
 
 /*
 # Permissions Available

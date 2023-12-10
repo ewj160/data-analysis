@@ -38,6 +38,13 @@ from sys.databases d
 	left join sys.change_tracking_databases ctcd on (d.database_id=ctcd.database_id)
 where d.database_id = DB_ID();
 
+select name as [Database Scoped Configuration]
+, value as [Value]
+, value_for_secondary as [Value for Secondary]
+, case when is_value_default = 1 then 'Yes' else 'No' end as [Is Default Value]
+from sys.database_scoped_configurations
+order by name;
+
 select desired_state_desc [Desired State]
 , actual_state_desc as [Actual State]
 , actual_state_additional_info as [Actual State Additional Info]
