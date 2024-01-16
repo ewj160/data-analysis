@@ -154,9 +154,9 @@ begin
     , columns.encryption_algorithm_name as [Encyption Algorithm Name]
     , columns.graph_type_desc as [Graph Type]
     , column_comment.[value] as [Column Description]
-    , sensitivity_classifications.label as [Sensitivity Label]
-    , sensitivity_classifications.information_type as [Information Type]
-    , sensitivity_classifications.rank_desc as [Sensitivity Rank]
+    , sens_class.label as [Sensitivity Label]
+    , sens_class.information_type as [Information Type]
+    , sens_class.rank_desc as [Sensitivity Rank]
     -- legder
     , columns.ledger_view_column_type_desc as [Ledger View Column]
     from sys.all_objects all_tables
@@ -175,10 +175,10 @@ begin
             and column_comment.minor_id = columns.column_id 
             and column_comment.name = N'MS_Description'
         )
-        left join sys.sensitivity_classifications on (
-            sensitivity_classifications.class = 1
-            and sensitivity_classifications.major_id = all_tables.object_id 
-            and sensitivity_classifications.minor_id = columns.column_id
+        left join sys.sensitivity_classifications sens_class on (
+            sens_class.class = 1
+            and sens_class.major_id = all_tables.object_id 
+            and sens_class.minor_id = columns.column_id
         )
     where (@SchemaName is null or @SchemaName = schemas.name)
         and (@TableName is null or @TableName = all_tables.name)
